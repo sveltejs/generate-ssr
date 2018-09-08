@@ -43,7 +43,7 @@ const booleanAttributes = new Set([
 	'translate'
 ]);
 
-export default function(node, target) {
+export default function(node, target, options) {
 	let openingTag = `<${node.name}`;
 	let textareaContents; // awkward special case
 
@@ -124,7 +124,7 @@ export default function(node, target) {
 	if (node.name === 'textarea' && textareaContents !== undefined) {
 		target.append(textareaContents);
 	} else {
-		fragment(node.children, target);
+		fragment(node.children, target, options);
 	}
 
 	if (!isVoidElementName(node.name)) {

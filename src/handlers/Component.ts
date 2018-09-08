@@ -7,7 +7,7 @@ import getTailSnippet from '../utils/getTailSnippet';
 
 type AppendTarget = any; // TODO
 
-export default function(node, target) {
+export default function(node, target, options) {
 	function stringifyAttribute(chunk: Node) {
 		if (chunk.type === 'Text') {
 			return escapeTemplate(escape(chunk.data));
@@ -111,7 +111,7 @@ export default function(node, target) {
 
 		target.appendTargets.push(appendTarget);
 
-		fragment(node.children, target);
+		fragment(node.children, target, options);
 
 		const slotted = Object.keys(appendTarget.slots)
 			.map(name => `${quoteNameIfNecessary(name)}: () => \`${appendTarget.slots[name]}\``)

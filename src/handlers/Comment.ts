@@ -1,5 +1,4 @@
-export default function(node, target, options = {}) { // TODO pass through options
-	// Allow option to preserve comments, otherwise ignore
+export default function(node, target, options) {
 	if (options.preserveComments) {
 		target.append(`<!--${node.data}-->`);
 	}

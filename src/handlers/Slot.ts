@@ -1,7 +1,7 @@
 import fragment from './fragment';
 import { quotePropIfNecessary } from '../utils/quoteIfNecessary';
 
-export default function(node, target) {
+export default function(node, target, options) {
 	const name = node.attributes.find(attribute => attribute.name === 'name');
 
 	const slotName = name && name.chunks[0].data || 'default';
@@ -9,7 +9,7 @@ export default function(node, target) {
 
 	target.append(`\${options && options.slotted && options.slotted${prop} ? options.slotted${prop}() : \``);
 
-	fragment(node.children, target);
+	fragment(node.children, target, options);
 
 	target.append(`\`}`);
 }

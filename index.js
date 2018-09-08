@@ -106,8 +106,6 @@ var globalWhitelist = new Set([
 ]);
 
 function Comment (node, target, options) {
-    if (options === void 0) { options = {}; }
-    // Allow option to preserve comments, otherwise ignore
     if (options.preserveComments) {
         target.append("<!--" + node.data + "-->");
     }
@@ -939,7 +937,7 @@ function getTailSnippet(node) {
     return "[\u2702" + start + "-" + end + "\u2702]";
 }
 
-function Component (node, target) {
+function Component (node, target, options) {
     function stringifyAttribute(chunk) {
         if (chunk.type === 'Text') {
             return escapeTemplate(escape(chunk.data));
@@ -1011,7 +1009,7 @@ function Component (node, target) {
             slotStack: ['default']
         };
         target.appendTargets.push(appendTarget_1);
-        fragment$1(node.children, target);
+        fragment$1(node.children, target, options);
         var slotted = Object.keys(appendTarget_1.slots)
             .map(function (name) { return quoteNameIfNecessary(name) + ": () => `" + appendTarget_1.slots[name] + "`"; })
             .join(', ');
@@ -1026,7 +1024,22 @@ function Component (node, target) {
 }
 var templateObject_1;
 
-function EachBlock (node, target) {
+function DebugTag (node, target, options) {
+    if (!options.dev)
+        return;
+    var filename = options.file || null;
+    var _a = options.locate(node.start + 1), line = _a.line, column = _a.column;
+    var obj = node.expressions.length === 0
+        ? "ctx"
+        : "{ " + node.expressions
+            .map(function (e) { return e.node.name; })
+            .map(function (name) { return name + ": ctx." + name; })
+            .join(', ') + " }";
+    var str = '${@debug(' + ((filename && stringify(filename)) + ", " + line + ", " + column + ", " + obj + ")}");
+    target.append(str);
+}
+
+function EachBlock (node, target, options) {
     var snippet = node.expression.snippet;
     var props = node.contexts.map(function (prop) { return prop.key.name + ": item" + prop.tail; });
     var getContext = node.index
@@ -1034,12 +1047,12 @@ function EachBlock (node, target) {
         : "item => Object.assign({}, ctx, { " + props.join(', ') + " })";
     var open = "${ " + (node["else"] ? snippet + ".length ? " : '') + "@each(" + snippet + ", " + getContext + ", ctx => `";
     target.append(open);
-    fragment$1(node.children, target);
+    fragment$1(node.children, target, options);
     var close = "`)";
     target.append(close);
     if (node["else"]) {
         target.append(" : `");
-        fragment$1(node["else"].children, target);
+        fragment$1(node["else"].children, target, options);
         target.append("`");
     }
     target.append('}');
@@ -1090,7 +1103,7 @@ var booleanAttributes = new Set([
     'spellcheck',
     'translate'
 ]);
-function Element (node, target) {
+function Element (node, target, options) {
     var openingTag = "<" + node.name;
     var textareaContents; // awkward special case
     var slot = node.getStaticAttributeValue('slot');
@@ -1168,44 +1181,44 @@ function Element (node, target) {
         target.append(textareaContents);
     }
     else {
-        fragment$1(node.children, target);
+        fragment$1(node.children, target, options);
     }
     if (!isVoidElementName(node.name)) {
         target.append("</" + node.name + ">");
     }
 }
 
-function Head (node, target) {
+function Head (node, target, options) {
     target.append('${(__result.head += `');
-    fragment$1(node.children, target);
+    fragment$1(node.children, target, options);
     target.append('`, "")}');
 }
 
-function HtmlTag (node, target) {
+function HtmlTag (node, target, options) {
     target.append('${' + node.expression.snippet + '}');
 }
 
-function IfBlock (node, target) {
+function IfBlock (node, target, options) {
     var snippet = node.expression.snippet;
     target.append('${ ' + snippet + ' ? `');
-    fragment$1(node.children, target);
+    fragment$1(node.children, target, options);
     target.append('` : `');
     if (node["else"]) {
-        fragment$1(node["else"].children, target);
+        fragment$1(node["else"].children, target, options);
     }
     target.append('` }');
 }
 
-function Slot (node, target) {
+function Slot (node, target, options) {
     var name = node.attributes.find(function (attribute) { return attribute.name === 'name'; });
     var slotName = name && name.chunks[0].data || 'default';
     var prop = quotePropIfNecessary(slotName);
     target.append("${options && options.slotted && options.slotted" + prop + " ? options.slotted" + prop + "() : `");
-    fragment$1(node.children, target);
+    fragment$1(node.children, target, options);
     target.append("`}");
 }
 
-function Tag (node, target) {
+function Tag (node, target, options) {
     target.append(node.parent &&
         node.parent.type === 'Element' &&
         node.parent.name === 'style'
@@ -1213,7 +1226,7 @@ function Tag (node, target) {
         : '${@escape(' + node.expression.snippet + ')}');
 }
 
-function Text (node, target) {
+function Text (node, target, options) {
     var text = node.data;
     if (!node.parent ||
         node.parent.type !== 'Element' ||
@@ -1224,9 +1237,9 @@ function Text (node, target) {
     target.append(escape(escapeTemplate(text)));
 }
 
-function Title (node, target) {
+function Title (node, target, options) {
     target.append("<title>");
-    fragment$1(node.children, target);
+    fragment$1(node.children, target, options);
     target.append("</title>");
 }
 
@@ -1235,6 +1248,7 @@ var handlers = {
     AwaitBlock: AwaitBlock,
     Comment: Comment,
     Component: Component,
+    DebugTag: DebugTag,
     EachBlock: EachBlock,
     Element: Element,
     Head: Head,
@@ -1246,22 +1260,22 @@ var handlers = {
     Title: Title,
     Window: noop
 };
-function fragment (nodes, target) {
+function fragment (nodes, target, options) {
     nodes.forEach(function (node) {
         var handler = handlers[node.type];
         if (!handler) {
             throw new Error("No handler for '" + node.type + "' nodes");
         }
-        handler(node, target);
+        handler(node, target, options);
     });
 }
 
-function AwaitBlock (node, target) {
+function AwaitBlock (node, target, options) {
     var snippet = node.expression.snippet;
     target.append('${(function(__value) { if(@isPromise(__value)) return `');
-    fragment(node.pending.children, target);
+    fragment(node.pending.children, target, options);
     target.append('`; return function(ctx) { return `');
-    fragment(node.then.children, target);
+    fragment(node.then.children, target, options);
     target.append("`;}(Object.assign({}, ctx, { " + node.value + ": __value }));}(" + snippet + ")) }");
 }
 
@@ -1270,6 +1284,7 @@ var handlers$1 = {
     AwaitBlock: AwaitBlock,
     Comment: Comment,
     Component: Component,
+    DebugTag: DebugTag,
     EachBlock: EachBlock,
     Element: Element,
     Head: Head,
@@ -1281,13 +1296,13 @@ var handlers$1 = {
     Title: Title,
     Window: noop$1
 };
-function fragment$1 (nodes, target) {
+function fragment$1 (nodes, target, options) {
     nodes.forEach(function (node) {
         var handler = handlers$1[node.type];
         if (!handler) {
             throw new Error("No handler for '" + node.type + "' nodes");
         }
-        handler(node, target);
+        handler(node, target, options);
     });
 }
 
@@ -1313,7 +1328,9 @@ function generate(compiler) {
     var target = new SsrTarget();
     var computations = compiler.computations, name = compiler.name, templateProperties = compiler.templateProperties;
     // create main render() function
-    fragment$1(trim(compiler.fragment.children), target);
+    fragment$1(trim(compiler.fragment.children), target, Object.assign({
+        locate: compiler.locate
+    }, compiler.options));
     // trim(compiler.fragment.children).forEach((node: Node) => {
     // 	node.ssr(target);
     // });

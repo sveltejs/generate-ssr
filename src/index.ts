@@ -37,7 +37,9 @@ export default function generate(compiler: Compiler) {
 	const { computations, name, templateProperties } = compiler;
 
 	// create main render() function
-	fragment(trim(compiler.fragment.children), target);
+	fragment(trim(compiler.fragment.children), target, Object.assign({
+		locate: compiler.locate
+	}, compiler.options));
 	// trim(compiler.fragment.children).forEach((node: Node) => {
 	// 	node.ssr(target);
 	// });

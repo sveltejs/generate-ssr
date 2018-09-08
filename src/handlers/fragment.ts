@@ -1,6 +1,7 @@
 import AwaitBlock from './AwaitBlock';
 import Comment from './Comment';
 import Component from './Component';
+import DebugTag from './DebugTag';
 import EachBlock from './EachBlock';
 import Element from './Element';
 import Head from './Head';
@@ -11,7 +12,7 @@ import Tag from './Tag';
 import Text from './Text';
 import Title from './Title';
 
-type Handler = (node: any, target: any) => void;
+type Handler = (node: any, target: any, options: any) => void;
 
 function noop(){}
 
@@ -19,6 +20,7 @@ const handlers: Record<string, Handler> = {
 	AwaitBlock,
 	Comment,
 	Component,
+	DebugTag,
 	EachBlock,
 	Element,
 	Head,
@@ -31,7 +33,7 @@ const handlers: Record<string, Handler> = {
 	Window: noop
 };
 
-export default function(nodes, target) {
+export default function(nodes, target, options) {
 	nodes.forEach(node => {
 		const handler = handlers[node.type];
 
@@ -39,6 +41,6 @@ export default function(nodes, target) {
 			throw new Error(`No handler for '${node.type}' nodes`);
 		}
 
-		handler(node, target);
+		handler(node, target, options);
 	});
 }

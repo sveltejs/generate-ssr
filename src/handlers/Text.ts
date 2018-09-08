@@ -1,6 +1,6 @@
 import { escape, escapeHTML, escapeTemplate } from '../utils/stringify';
 
-export default function(node, target) {
+export default function(node, target, options) {
 	let text = node.data;
 	if (
 		!node.parent ||
