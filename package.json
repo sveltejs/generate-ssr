@@ -6,6 +6,7 @@
   "module": "index.js",
   "types": "types/index.d.ts",
   "files": [
+    "index.js",
     "types"
   ],
   "devDependencies": {
