@@ -1,0 +1,35 @@
+{
+  "name": "@sveltejs/generate-ssr",
+  "description": "SSR generator for Svelte",
+  "version": "1.0.0",
+  "repository": "sveltejs/generate-ssr",
+  "module": "index.js",
+  "types": "types/index.d.ts",
+  "files": [
+    "types"
+  ],
+  "devDependencies": {
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.9.4",
+    "glob": "^7.1.2",
+    "mocha": "^5.2.0",
+    "rollup": "^0.65.2",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "rollup-plugin-typescript": "^0.8.1",
+    "sander": "^0.6.0",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.0.3"
+  },
+  "scripts": {
+    "build-declarations": "tsc -d && node scripts/move-type-declarations.js",
+    "build": "npm run build-declarations && rollup -c",
+    "dev": "rollup -cw",
+    "test": "mocha --opts mocha.opts",
+    "prepublishOnly": "npm test && npm run build"
+  },
+  "license": "LIL",
+  "dependencies": {
+    "acorn": "^5.7.2",
+    "tslib": "^1.9.3"
+  }
+}
