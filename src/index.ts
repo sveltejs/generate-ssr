@@ -1,6 +1,6 @@
 import deindent from './utils/deindent';
 import { stringify } from './utils/stringify';
-import globalWhitelist from './utils/globalWhitelist';
+import globalAllowlist from './utils/globalAllowlist';
 import fragment from './handlers/fragment';
 
 // TODO put types somewhere
@@ -50,7 +50,7 @@ export default function generate(compiler: Compiler) {
 
 	// generate initial state object
 	const expectedProperties = Array.from(compiler.expectedProperties);
-	const globals = expectedProperties.filter(prop => globalWhitelist.has(prop));
+	const globals = expectedProperties.filter(prop => globalAllowlist.has(prop));
 	const storeProps = expectedProperties.filter(prop => prop[0] === '$');
 
 	const initialState = [];
